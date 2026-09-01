@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>South Asia Operational Monitoring Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f3f4f6;
+    --card:#ffffff;
+    --border:#e5e7eb;
+    --text:#1f2937;
+    --muted:#6b7280;
+    --critical:#c0392b;
+    --elevated:#b5690a;
+    --stable:#166534;
+    --info:#1a6aad;
+    --header-blue:#1a2b6d;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    font-family:'Inter',system-ui,sans-serif;
+    color:var(--text);
+    padding:1.5rem 1rem;
+  }
+  .container{
+    max-width:1400px;
+    margin:0 auto;
+  }
+  /* Header */
+  .header{
+    background:var(--header-blue);
+    border:1px solid var(--header-blue);
+    border-radius:6px;
+    padding:1.5rem 1.75rem;
+    margin-bottom:1.25rem;
+    color:#ffffff;
+  }
+  .header-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:1rem;
+  }
+  .header-title-block{
+    display:flex;
+    align-items:center;
+    gap:1rem;
+  }
+  .header-logo{
+    background:#ffffff;
+    border-radius:4px;
+    padding:0.4rem 0.7rem;
+    display:flex;
+    align-items:center;
+  }
+  .header-logo img{
+    height:34px;
+    display:block;
+  }
+  .header h1{
+    margin:0 0 0.3rem 0;
+    font-size:1.5rem;
+    font-weight:800;
+    letter-spacing:-0.01em;
+    color:#ffffff;
+  }
+  .header .subtitle{
+    color:#c9d3ef;
+    font-size:0.85rem;
+    font-weight:500;
+  }
+  .asof-badge{
+    background:rgba(255,255,255,0.12);
+    border:1px solid rgba(255,255,255,0.35);
+    border-radius:6px;
+    padding:0.5rem 0.9rem;
+    font-size:0.8rem;
+    font-weight:600;
+    color:#ffffff;
+    white-space:nowrap;
+  }
+
+  /* Section title */
+  .section-title{
+    font-size:0.95rem;
+    font-weight:700;
+    margin:0 0 0.75rem 2px;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+    color:var(--text);
+  }
+  section{margin-bottom:1.5rem;}
+
+  /* Key Insights */
+  .exec-table{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-left:3px solid var(--header-blue);
+    border-radius:6px;
+    padding:1.25rem 1.5rem;
+  }
+  .exec-row{
+    display:grid;
+    grid-template-columns:180px 1fr;
+    gap:1rem;
+    padding:0.6rem 0;
+  }
+  .exec-row + .exec-row{
+    border-top:1px solid var(--border);
+  }
+  .exec-label{
+    font-weight:700;
+    font-size:0.85rem;
+    color:var(--text);
+  }
+  .exec-content ul{
+    margin:0;
+    padding-left:1.1rem;
+  }
+  .exec-content li{
+    font-size:0.9rem;
+    line-height:1.55;
+    margin-bottom:0.3rem;
+  }
+  .exec-content li:last-child{margin-bottom:0;}
+  .exec-row-click{
+    padding:0.4rem 0;
+  }
+  .exec-row-click + .exec-row-click{
+    border-top:1px solid var(--border);
+  }
+  .monitoring-term-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:1.25rem;
+    margin-top:0.9rem;
+    padding-top:0.9rem;
+    border-top:1px solid var(--border);
+  }
+  .monitoring-term-title{
+    font-size:0.78rem;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0.03em;
+    color:var(--muted);
+    margin-bottom:0.5rem;
+  }
+  .monitoring-term-col ul{
+    margin:0;
+    padding-left:1.1rem;
+  }
+  .monitoring-term-col li{
+    font-size:0.85rem;
+    line-height:1.6;
+    color:var(--text);
+  }
+  @media (max-width:700px){
+    .monitoring-term-grid{grid-template-columns:1fr;}
+  }
+
+  /* 10-second visual preview grid */
+  .exec-row-visual{grid-template-columns:180px 1fr;}
+  .overall-impact-tag{
+    display:inline-flex;
+    align-items:center;
+    gap:0.4rem;
+    background:#eaf7ee;
+    color:var(--stable);
+    border:1px solid #bfe6cb;
+    border-radius:999px;
+    padding:0.3rem 0.7rem 0.3rem 0.85rem;
+    font-size:0.8rem;
+    font-weight:600;
+    margin-bottom:0.75rem;
+    cursor:pointer;
+    transition:background 0.15s ease, transform 0.15s ease;
+  }
+  .overall-impact-tag:hover{background:#dcf1e3;}
+  .overall-impact-tag:hover .impact-tag-hint{transform:translateX(3px);}
+  .overall-impact-tag b{font-weight:800;}
+  .impact-tag-hint{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:18px;
+    height:18px;
+    border-radius:50%;
+    background:rgba(22,101,52,0.12);
+    color:var(--stable);
+    transition:transform 0.15s ease;
+    flex-shrink:0;
+  }
+
+  /* Impact modal */
+  .modal-overlay{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(15,23,42,0.5);
+    align-items:center;
+    justify-content:center;
+    z-index:1000;
+    padding:1rem;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal-box{
+    background:#fff;
+    border-radius:8px;
+    max-width:480px;
+    width:100%;
+    padding:1.5rem 1.6rem;
+    box-shadow:0 10px 40px rgba(0,0,0,0.25);
+  }
+  .modal-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:1rem;
+    margin-bottom:0.9rem;
+  }
+  .modal-title{
+    font-size:1rem;
+    font-weight:800;
+    color:var(--text);
+    margin:0;
+  }
+  .modal-close{
+    background:none;
+    border:none;
+    font-size:1.3rem;
+    line-height:1;
+    color:var(--muted);
+    cursor:pointer;
+    padding:0;
+  }
+  .modal-close:hover{color:var(--text);}
+  .modal-status-line{
+    display:inline-block;
+    background:#eaf7ee;
+    color:var(--stable);
+    border:1px solid #bfe6cb;
+    border-radius:999px;
+    padding:0.3rem 0.85rem;
+    font-size:0.8rem;
+    font-weight:700;
+    margin-bottom:0.9rem;
+  }
+  .modal-box ul{
+    margin:0;
+    padding-left:1.1rem;
+  }
+  .modal-box li{
+    font-size:0.88rem;
+    line-height:1.55;
+    margin-bottom:0.45rem;
+    color:#374151;
+  }
+  .modal-box li:last-child{margin-bottom:0;}
+  .location-preview-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(120px, 1fr));
+    gap:0.6rem;
+  }
+  .loc-tile{
+    border-radius:6px;
+    padding:0.7rem 0.65rem;
+    text-align:center;
+    border:1px solid var(--border);
+    background:#fafbfc;
+  }
+  .loc-tile.neutral{background:#f7f8fa; border-color:var(--border);}
+  .loc-name{
+    font-weight:700;
+    font-size:0.78rem;
+    margin-bottom:0.5rem;
+    line-height:1.25;
+  }
+  .loc-icons{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:0.4rem;
+  }
+  .cat-icon{
+    width:30px;
+    height:30px;
+    border-radius:50%;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    flex-shrink:0;
+    box-shadow:0 1px 2px rgba(0,0,0,0.15);
+  }
+  .cat-icon.cat-disease{background:#dc2626;}
+  .cat-icon.cat-weather{background:#2563eb;}
+  .cat-icon.cat-unrest{background:#d97706;}
+  .cat-icon.cat-summit{background:#4338ca;}
+  .cat-icon.cat-clear{background:#16a34a;}
+  @media (max-width:900px){
+    .exec-row-visual{grid-template-columns:1fr;}
+  }
+
+  /* Cards */
+  .card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:1.25rem 1.5rem;
+  }
+
+  /* Badges */
+  .badge{
+    display:inline-flex;
+    align-items:center;
+    gap:0.4rem;
+    padding:0.25rem 0.7rem;
+    border-radius:999px;
+    font-size:0.72rem;
+    font-weight:700;
+    color:#fff;
+    white-space:nowrap;
+  }
+  .badge.critical{background:var(--critical);}
+  .badge.elevated{background:var(--elevated);}
+  .badge.stable{background:var(--stable);}
+  .badge.info{background:var(--info);}
+
+  .dot{
+    width:7px;height:7px;border-radius:50%;
+    background:#fff;
+    display:inline-block;
+  }
+
+  /* Region tabs */
+  .region-tabs{
+    display:flex;
+    flex-wrap:wrap;
+    gap:0.5rem;
+    margin-bottom:0.9rem;
+  }
+  .region-tab{
+    background:var(--card);
+    border:1px solid var(--border);
+    color:var(--text);
+    font-family:inherit;
+    font-size:0.8rem;
+    font-weight:600;
+    padding:0.45rem 1rem;
+    border-radius:999px;
+    cursor:pointer;
+    transition:background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+  .region-tab:hover{
+    border-color:var(--header-blue);
+    color:var(--header-blue);
+  }
+  .region-tab.active{
+    background:var(--header-blue);
+    border-color:var(--header-blue);
+    color:#fff;
+  }
+  .region-group-tab{
+    background:#eef2f7;
+    border:1px solid var(--border);
+    color:var(--text);
+    font-family:inherit;
+    font-size:0.8rem;
+    font-weight:700;
+    padding:0.45rem 1rem;
+    border-radius:999px;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    gap:0.35rem;
+    transition:background 0.15s ease, border-color 0.15s ease;
+  }
+  .region-group-tab:hover{
+    border-color:var(--header-blue);
+  }
+  .region-group-tab.open{
+    background:var(--header-blue);
+    border-color:var(--header-blue);
+    color:#fff;
+  }
+  .group-chev{
+    display:inline-block;
+    transition:transform 0.15s ease;
+    font-size:0.7rem;
+  }
+  .region-group-tab.open .group-chev{
+    transform:rotate(180deg);
+  }
+  .region-subgroup{
+    display:flex;
+    flex-wrap:wrap;
+    gap:0.5rem;
+    margin:-0.4rem 0 0.9rem 1.25rem;
+    padding-left:0.75rem;
+    border-left:2px solid var(--border);
+  }
+
+  /* Indicator table */
+  table.indicators{
+    width:100%;
+    border-collapse:collapse;
+  }
+  table.indicators th{
+    text-align:left;
+    font-size:0.72rem;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+    color:var(--muted);
+    padding:0 0.5rem 0.6rem 0.5rem;
+    border-bottom:2px solid var(--border);
+  }
+  table.indicators .indicator-head-row th{
+    background:var(--header-blue);
+    color:#ffffff;
+    padding:0.65rem 0.75rem;
+    border-bottom:none;
+    border-radius:4px 4px 0 0;
+  }
+  table.indicators .indicator-head-row th:first-child{border-radius:4px 0 0 0;}
+  table.indicators .indicator-head-row th:last-child{border-radius:0 4px 0 0;}
+  table.indicators td{
+    padding:0.85rem 0.5rem;
+    vertical-align:top;
+    border-bottom:1px solid var(--border);
+    font-size:0.88rem;
+  }
+  table.indicators tr:last-child td{border-bottom:none;}
+  .ind-name{font-weight:700;}
+  .ind-region{
+    font-size:0.75rem;
+    color:var(--muted);
+    font-weight:500;
+    margin-top:0.15rem;
+  }
+  .assessment p{margin:0 0 0.4rem 0; line-height:1.5;}
+  .assessment p:last-child{margin-bottom:0;}
+  .assessment ul{margin:0 0 0.4rem 1.1rem; padding:0;}
+  .assessment ul:last-child{margin-bottom:0;}
+  .assessment li{margin-bottom:0.3rem; line-height:1.5;}
+  .assessment li:last-child{margin-bottom:0;}
+  .firm-cell{
+    font-size:0.85rem;
+    color:#374151;
+    line-height:1.4;
+  }
+
+  /* Anticipate toggle */
+  .watch-toggle{
+    margin-top:0.6rem;
+    display:inline-flex;
+    align-items:center;
+    gap:0.35rem;
+    background:#eaf2fb;
+    color:var(--info);
+    border:1px solid #bcdcf5;
+    border-radius:999px;
+    padding:0.3rem 0.75rem;
+    font-size:0.75rem;
+    font-weight:700;
+    cursor:pointer;
+    user-select:none;
+    width:fit-content;
+  }
+  .watch-box{
+    display:none;
+    margin-top:0.5rem;
+    background:#eef6fc;
+    border:1px solid #bcdcf5;
+    border-radius:6px;
+    padding:0.75rem 0.9rem;
+    font-size:0.85rem;
+    line-height:1.5;
+  }
+  .watch-box.open{display:block;}
+  .watch-box ul{margin:0; padding-left:1.1rem;}
+  .watch-box li{margin-bottom:0.35rem;}
+  .watch-box li:last-child{margin-bottom:0;}
+  .watch-toggle .chev{transition:transform 0.15s ease;}
+  .watch-toggle.open .chev{transform:rotate(180deg);}
+
+  /* Action row: Anticipate + Link + Attach */
+  .action-row{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:0.5rem;
+    margin-top:0.6rem;
+  }
+  .action-row .watch-toggle{margin-top:0;}
+  .action-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:0.35rem;
+    border-radius:999px;
+    padding:0.3rem 0.75rem;
+    font-size:0.75rem;
+    font-weight:700;
+    text-decoration:none;
+    cursor:pointer;
+    user-select:none;
+    border:1px solid transparent;
+  }
+  .action-btn.active{
+    background:#eaf7ee;
+    color:var(--stable);
+    border-color:#bfe6cb;
+  }
+  .action-btn.active:hover{
+    background:#dcf1e3;
+  }
+  .action-btn.disabled{
+    background:#f3f4f6;
+    color:#9ca3af;
+    border-color:var(--border);
+    cursor:not-allowed;
+  }
+  .inline-link{
+    color:var(--info);
+    font-weight:600;
+    text-decoration:underline;
+  }
+
+  /* Flashpoints */
+  table.flashpoints{width:100%; border-collapse:collapse;}
+  table.flashpoints th{
+    text-align:left;
+    font-size:0.72rem;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+    color:var(--muted);
+    padding:0 0.5rem 0.6rem 0.5rem;
+    border-bottom:2px solid var(--border);
+  }
+  table.flashpoints td{
+    padding:0.7rem 0.5rem;
+    border-bottom:1px solid var(--border);
+    font-size:0.88rem;
+    vertical-align:top;
+  }
+  table.flashpoints tr:last-child td{border-bottom:none;}
+  .fp-date{font-weight:700; white-space:nowrap;}
+  .live-tag{
+    color:var(--critical);
+    font-weight:800;
+    font-size:0.72rem;
+    margin-left:0.5rem;
+  }
+
+  footer{
+    text-align:center;
+    padding:1.25rem 0 0.5rem 0;
+    font-size:0.75rem;
+    color:var(--muted);
+  }
+  footer .foot-strong{font-weight:700; color:var(--text);}
+
+  /* Status overview bars */
+  .status-overview{
+    display:flex;
+    flex-direction:column;
+    gap:0.9rem;
+  }
+  .status-curve-svg{
+    width:100%;
+    height:auto;
+    display:block;
+  }
+  .curve-val{
+    font-family:'Inter',system-ui,sans-serif;
+    font-size:13px;
+    font-weight:800;
+    fill:var(--text);
+  }
+  .curve-label{
+    font-family:'Inter',system-ui,sans-serif;
+    font-size:11px;
+    font-weight:600;
+    fill:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:0.03em;
+  }
+  .status-bar-row{
+    display:grid;
+    grid-template-columns:110px 1fr 32px;
+    align-items:center;
+    gap:0.85rem;
+  }
+  .status-bar-label{
+    display:flex;
+    align-items:center;
+    gap:0.5rem;
+    font-size:0.85rem;
+    font-weight:600;
+    color:var(--text);
+  }
+  .status-dot{
+    width:10px;
+    height:10px;
+    border-radius:50%;
+    display:inline-block;
+    flex-shrink:0;
+  }
+  .status-dot.elevated{background:var(--elevated);}
+  .status-dot.info{background:var(--info);}
+  .status-dot.stable{background:var(--stable);}
+  .status-dot.improved{background:#0f9d78;}
+  .status-bar-track{
+    background:#eef0f3;
+    border-radius:999px;
+    height:12px;
+    overflow:hidden;
+  }
+  .status-bar-fill{
+    height:100%;
+    border-radius:999px;
+  }
+  .status-bar-fill.elevated{background:var(--elevated);}
+  .status-bar-fill.info{background:var(--info);}
+  .status-bar-fill.stable{background:var(--stable);}
+  .status-bar-fill.improved{background:#0f9d78;}
+  .status-bar-count{
+    text-align:right;
+    font-weight:700;
+    font-size:0.9rem;
+    color:var(--text);
+  }
+  .status-overview-note{
+    margin-top:0.9rem;
+    padding-top:0.75rem;
+    border-top:1px solid var(--border);
+    font-size:0.78rem;
+    color:var(--muted);
+  }
+  .status-legend{
+    margin-top:0.75rem;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:0.5rem 1.5rem;
+  }
+  .status-legend-item{
+    display:flex;
+    align-items:flex-start;
+    gap:0.5rem;
+    font-size:0.8rem;
+    color:#374151;
+    line-height:1.4;
+  }
+  .status-legend-item .status-dot{
+    margin-top:0.3rem;
+    flex-shrink:0;
+  }
+  @media (max-width:700px){
+    .status-legend{grid-template-columns:1fr;}
+  }
+
+  @media (max-width:900px){
+    .exec-row{grid-template-columns:1fr;}
+    .header-top{align-items:flex-start;}
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-top">
+      <div class="header-title-block">
+        <div class="header-logo">
+          <img src="data:image/png;base64,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" alt="McKinsey & Company">
+        </div>
+        <div>
+          <h1>South Asia Operational Monitoring Dashboard</h1>
+          <div class="subtitle">India &middot; Bangladesh &middot; Sri Lanka &mdash; Rolling operational risk monitor</div>
+        </div>
+      </div>
+      <div class="asof-badge">As of 01 Sept 2026</div>
+    </div>
+  </div>
+
+  <!-- KEY INSIGHTS -->
+  <section>
+    <div class="section-title">Key Insights</div>
+    <div class="exec-table">
+      <div class="exec-row-click">
+        <div class="overall-impact-tag" onclick="openImpactModal()" role="button" tabindex="0">Overall Impact on Firm Offices <span class="impact-tag-hint"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></div>
+      </div>
+      <div class="exec-row-click">
+        <div class="overall-impact-tag" onclick="openImplicationsModal()" role="button" tabindex="0">Key Implications <span class="impact-tag-hint"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></div>
+      </div>
+
+      <div class="exec-row-click">
+        <div class="overall-impact-tag" onclick="openShortTermModal()" role="button" tabindex="0">Short-Term Monitoring <span class="impact-tag-hint"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></div>
+      </div>
+      <div class="exec-row-click">
+        <div class="overall-impact-tag" onclick="openLongTermModal()" role="button" tabindex="0">Long-Term Monitoring <span class="impact-tag-hint"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- INDICATOR SUMMARY -->
+  <section>
+    <div class="section-title">Indicator Summary</div>
+
+    <div class="region-tabs" id="regionTabs">
+      <button class="region-group-tab" onclick="toggleRegionGroup('firmOfficeGroup', this)">Firm Office &ndash; India, Sri Lanka <span class="group-chev">&#9662;</span></button>
+      <button class="region-group-tab" onclick="toggleRegionGroup('firmEventGroup', this)">Firm Event <span class="group-chev">&#9662;</span></button>
+      <button class="region-tab" data-region="Dhaka &amp; Chattogram" onclick="filterRegion('Dhaka &amp; Chattogram', this)">Dhaka &amp; Chattogram</button>
+      <button class="region-tab" data-region="Nepal Flood" onclick="filterRegion('Nepal Flood', this)">Nepal Flood</button>
+    </div>
+
+    <div class="region-subgroup" id="firmOfficeGroup" style="display:none;">
+      <button class="region-tab" data-region="Delhi/ Gurugram" onclick="filterRegion('Delhi/ Gurugram', this)">Delhi/ Gurugram</button>
+      <button class="region-tab" data-region="Mumbai" onclick="filterRegion('Mumbai', this)">Mumbai</button>
+      <button class="region-tab" data-region="Kolkata" onclick="filterRegion('Kolkata', this)">Kolkata</button>
+      <button class="region-tab" data-region="Chennai" onclick="filterRegion('Chennai', this)">Chennai</button>
+      <button class="region-tab" data-region="Bengaluru" onclick="filterRegion('Bengaluru', this)">Bengaluru</button>
+      <button class="region-tab" data-region="Colombo" onclick="filterRegion('Colombo', this)">Colombo</button>
+    </div>
+
+    <div class="region-subgroup" id="firmEventGroup" style="display:none;">
+      <button class="region-tab" data-region="Udaipur" onclick="filterRegion('Udaipur', this)">Udaipur</button>
+    </div>
+
+    <div class="card">
+      <table class="indicators">
+        <thead>
+          <tr class="indicator-head-row">
+            <th style="width:17%">Indicator</th>
+            <th style="width:13%">Current Status</th>
+            <th style="width:16%">Firm Security Action</th>
+            <th>Assessment</th>
+          </tr>
+        </thead>
+        <tbody id="indicatorBody">
+
+          <!-- Delhi/ Gurugram: H1N1 -->
+          <tr data-region="Delhi/ Gurugram">
+            <td>
+              <div class="ind-name">H1N1 outbreak Delhi/Gurugram</div>
+              <div class="ind-region">Delhi/ Gurugram</div>
+            </td>
+            <td><span class="badge info"><span class="dot"></span>Moderate</span></td>
+            <td class="firm-cell">A FYI health advisory shared with GURU/GUVA</td>
+            <td class="assessment">
+              <p>As per health department data, Delhi's total number of H1N1 cases has reached 3,006, with daily infections continuing to increase.</p>
+              <div class="action-row">
+                <div class="watch-toggle" onclick="toggleWatch(this)">&#128065; Anticipate <span class="chev">&#9650;</span></div>
+                <a href="https://www.news18.com/cities/new-delhi-news/delhis-h1n1-outbreak-refuses-to-slow-199-cases-seasons-second-highest-tally-crosses-3006-10301289.html" target="_blank" rel="noopener" class="action-btn active">&#128279; Link</a>
+                <a href="Ministry_of_Health_H1N1_Advisory.png" target="_blank" rel="noopener" download class="action-btn active">&#128206; Attach</a>
+              </div>
+              <div class="watch-box">Whether the case-addition rate continues climbing and whether any hospital-linked fatality is officially attributed to H1N1.</div>
+            </td>
+          </tr>
+
+          <!-- Delhi/ Gurugram: BRICS -->
+          <tr data-region="Delhi/ Gurugram">
+            <td>
+              <div class="ind-name">BRICS Summit</div>
+              <div class="ind-region">Delhi/ Gurugram (Bharat Mandapam)</div>
+            </td>
+            <td><span class="badge stable"><span class="dot"></span>Low</span></td>
+            <td class="firm-cell">Details on traffic regulation/diversions shared</td>
+            <td class="assessment">
+              <p>The 18th BRICS Summit scheduled for Sept 12-13 at Bharat Mandapam, Pragati Maidan is expected to be attended by senior member delegations.</p>
+              <div class="action-row">
+                <div class="watch-toggle" onclick="toggleWatch(this)">&#128065; Anticipate <span class="chev">&#9650;</span></div>
+                <a href="https://www.mea.gov.in/all-media?dtl/41701/18th_BRICS_Summit" target="_blank" rel="noopener" class="action-btn active">&#128279; MEA</a>
+                <a href="https://x.com/dtptraffic/status/2094483046254911643" target="_blank" rel="noopener" class="action-btn active">&#128279; Traffic Advisory</a>
+                <span class="action-btn disabled" title="No attachment added yet">&#128206; Attach</span>
+              </div>
+              <div class="watch-box">
+                <ul>
+                  <li>Temporary traffic restrictions and road diversions along key VIP transit corridors, particularly on roads surrounding Bharat Mandapam and adjoining stretches near Pragati Maidan.</li>
+                  <li>Delhi traffic police to issue travel advisory on route plans connecting Indira Gandhi International Airport, the hotels and the summit venue.</li>
+                </ul>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Bengaluru: H1N1 -->
+          <tr data-region="Bengaluru">
+            <td>
+              <div class="ind-name">H1N1 (Swine Flu) Outbreak</div>
+              <div class="ind-region">Bengaluru</div>
+            </td>
+            <td><span class="badge stable"><span class="dot"></span>Low</span></td>
+            <td class="firm-cell">No Action, Just monitoring</td>
+            <td class="assessment">
+              <p>State health authorities describe the recent rise in H1N1 cases in Bengaluru as part of a seasonal monsoon surge, with no new virus variants detected.</p>
+              <div class="action-row">
+                <div class="watch-toggle" onclick="toggleWatch(this)">&#128065; Anticipate <span class="chev">&#9650;</span></div>
+                <span class="action-btn disabled" title="No source link added yet">&#128279; Link</span>
+                <span class="action-btn disabled" title="No attachment added yet">&#128206; Attach</span>
+              </div>
+              <div class="watch-box">Whether case counts continue rising beyond the expected seasonal pattern.</div>
+            </td>
+          </tr>
+
+          <!-- Mumbai: BRICS Global Impact Forum -->
+          <tr data-region="Mumbai">
+            <td>
+              <div class="ind-name">BRICS Global Impact Forum</div>
+              <div class="ind-region">Mumbai (The Taj Mahal Palace, Colaba)</div>
+            </td>
+            <td><span class="badge stable"><span class="dot"></span>Low</span></td>
+            <td class="firm-cell">Details on traffic regulation/diversions shared</td>
+            <td class="assessment">
+              <p>The BRICS Global Impact Forum is scheduled on Sept 5-6 at The Taj Mahal Palace hotel in Mumbai. Approximately 500 delegates, including senior Indian politicians, foreign diplomats, and BRICS business leaders, are expected to attend.</p>
+              <div class="action-row">
+                <div class="watch-toggle" onclick="toggleWatch(this)">&#128065; Anticipate <span class="chev">&#9650;</span></div>
+                <a href="https://www.freepressjournal.in/mumbai/mumbai-to-host-brics-global-impact-forum-ahead-of-18th-summit-bringing-soft-power-and-business-together" target="_blank" rel="noopener" class="action-btn active">&#128279; Link</a>
+                <span class="action-btn disabled" title="No attachment added yet">&#128206; Attach</span>
+              </div>
+              <div class="watch-box">
+                <ul>
+                  <li>Temporary traffic restrictions and road diversions along key VIP transit corridors.</li>
+                  <li>Travel disruptions are primarily anticipated on routes connecting Chhatrapati Shivaji Maharaj International Airport to Colaba, specifically via the Western Express Highway, Bandra-Worli Sea Link, and the Coastal Road/Marine Drive.</li>
+                </ul>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Kolkata: weather -->
+          <tr data-region="Kolkata">
+            <td>
+              <div class="ind-name">Inclement Weather Alert</div>
+              <div class="ind-region">Kolkata &amp; Southern Bengal</div>
+            </td>
+            <td><span class="badge stable"><span class="dot"></span>Low</span></td>
+            <td class="firm-cell">A FYI shared with KOLK</td>
+            <td class="assessment">
+              <p>Southern Bengal region including Kolkata faces active weather warnings for thunderstorms, and extremely heavy rainfall until 02 September due to a low-pressure area over Gangetic West Bengal and northwest Bay of Bengal.</p>
+              <div class="action-row">
+                <div class="watch-toggle" onclick="toggleWatch(this)">&#128065; Anticipate <span class="chev">&#9650;</span></div>
+                <a href="https://mausam.imd.gov.in/kolkata/mcdata/sb.pdf" target="_blank" rel="noopener" class="action-btn active">&#128279; Link</a>
+                <span class="action-btn disabled" title="No attachment added yet">&#128206; Attach</span>
+              </div>
+              <div class="watch-box">Low-lying areas of Kolkata and southern Bengal may experience localized flooding. Reduced availability of public transport and prolonged traffic congestion.</div>
+            </td>
+          </tr>
+
+          <!-- Colombo: dengue -->
+          <tr data-region="Colombo">
+            <td>
+              <div class="ind-name">Dengue Outbreak</div>
+              <div class="ind-region">Colombo / Western Province, Sri Lanka</div>
+            </td>
+            <td><span class="badge stable"><span class="dot"></span>Improved</span></td>
+            <td class="firm-cell">Monitoring, a PTA raised, a health advisory shared with CLMB</td>
+            <td class="assessment">
+              <p>The latest health bulletin indicates a decline in monthly dengue cases. Since January 2026, over 93,600 cases and 71 fatalities have been reported nationwide, with the Western Province &mdash; particularly Colombo and Gampaha districts &mdash; hardest hit. However, cases may surge again with the northeast monsoon.</p>
+              <div class="action-row">
+                <div class="watch-toggle" onclick="toggleWatch(this)">&#128065; Anticipate <span class="chev">&#9650;</span></div>
+                <a href="https://www.newsfirst.lk/2026/08/21/daily-dengue-cases-drop-by-80-amid-intensified-control-measures" target="_blank" rel="noopener" class="action-btn active">&#128279; Link</a>
+                <span class="action-btn disabled" title="No attachment added yet">&#128206; Attach</span>
+              </div>
+              <div class="watch-box">Whether case counts trend upward again as the North-East monsoon season approaches.</div>
+            </td>
+          </tr>
+
+          <!-- Dhaka & Chattogram: weather -->
+          <tr data-region="Dhaka &amp; Chattogram">
+            <td>
+              <div class="ind-name">Inclement Weather Alert</div>
+              <div class="ind-region">Dhaka &amp; Chattogram (also Mymensingh)</div>
+            </td>
+            <td><span class="badge stable"><span class="dot"></span>Low</span></td>
+            <td class="firm-cell">No Action, Just monitoring</td>
+            <td class="assessment">
+              <p>Eight regions of Bangladesh, including Dhaka, Mymensingh, and Chattogram, are likely to witness moderate rainfall until Aug 30 due to an active southwest monsoon.</p>
+              <div class="action-row">
+                <div class="watch-toggle" onclick="toggleWatch(this)">&#128065; Anticipate <span class="chev">&#9650;</span></div>
+                <a href="https://server6.bmd.gov.bd/en/p/Weather-Forecast" target="_blank" rel="noopener" class="action-btn active">&#128279; Link</a>
+                <span class="action-btn disabled" title="No attachment added yet">&#128206; Attach</span>
+              </div>
+              <div class="watch-box">Whether the rainfall alert is extended or intensified past Aug 30, or triggers localized flooding.</div>
+            </td>
+          </tr>
+
+          <!-- Dhaka & Chattogram: Dhaka protests -->
+          <tr data-region="Dhaka &amp; Chattogram">
+            <td>
+              <div class="ind-name">Protest Activity</div>
+              <div class="ind-region">Dhaka (Shahbagh, highway corridors)</div>
+            </td>
+            <td><span class="badge stable"><span class="dot"></span>Low</span></td>
+            <td class="firm-cell">No Action, Just monitoring</td>
+            <td class="assessment">
+              <p>Small-scale, low-impact protests by garment/outsourced workers and student groups have been intermittently reported in Dhaka since January 2026, as the country's political and social situation has broadly returned to stability, with Shahbagh intersection a common site. Most demonstrations have concluded peacefully, though some have escalated into clashes with police. On Aug 21, a political party blocked the Dhaka-Chattogram highway in Bandar during a protest rally, causing temporary travel disruption. On Aug 20, ten workers were injured when protesters clashed with police during a road blockade on a Dhaka highway.</p>
+              <div class="action-row">
+                <div class="watch-toggle" onclick="toggleWatch(this)">&#128065; Anticipate <span class="chev">&#9650;</span></div>
+                <span class="action-btn disabled" title="No source link added yet">&#128279; Link</span>
+                <span class="action-btn disabled" title="No attachment added yet">&#128206; Attach</span>
+              </div>
+              <div class="watch-box">Whether further highway blockades recur, given the pattern of intermittent escalation into clashes with police.</div>
+            </td>
+          </tr>
+
+          <!-- Dhaka & Chattogram: Socio/political instability -->
+          <tr data-region="Dhaka &amp; Chattogram">
+            <td>
+              <div class="ind-name">Socio/political instability</div>
+              <div class="ind-region">Dhaka &amp; Chattogram</div>
+            </td>
+            <td><span class="badge stable"><span class="dot"></span>Low</span></td>
+            <td class="firm-cell">Just monitoring</td>
+            <td class="assessment">
+              <p>Former Bangladeshi Prime Minister Sheikh Hasina, who was ousted from power and is currently facing a death penalty trial in Bangladesh, has announced plans to return to the country in December. She has called for the ban on her party, the Awami League, to be lifted, describing the charges and convictions against her as politically motivated and questioning the legitimacy of the February elections.</p>
+              <p>Bangladesh has continued to seek Hasina's extradition from India, where she is currently residing. Her proposed return could reignite political tensions, trigger protests by both supporters and opponents, and potentially strain India&ndash;Bangladesh relations. Given the legal proceedings against her and the country's polarized political environment, her return carries significant security risks, including the possibility of arrest or targeted violence.</p>
+              <p>The development comes at a time when Bangladesh has been showing signs of political and economic stabilization under the Bangladesh Nationalist Party (BNP) government led by Prime Minister Tarique Rahman. Any escalation linked to Hasina's return could challenge these gains and introduce fresh uncertainty into the country's political landscape.</p>
+              <div class="action-row">
+                <div class="watch-toggle" onclick="toggleWatch(this)">&#128065; Anticipate <span class="chev">&#9650;</span></div>
+                <a href="https://frontline.thehindu.com/politics/sheikh-hasina-return-bangladesh/article71300667.ece" target="_blank" rel="noopener" class="action-btn active">&#128279; Frontline</a>
+                <a href="https://www.bbc.com/news/articles/cvg9j8820v6o" target="_blank" rel="noopener" class="action-btn active">&#128279; BBC</a>
+                <span class="action-btn disabled" title="No attachment added yet">&#128206; Attach</span>
+              </div>
+              <div class="watch-box">Confirmation of a specific December return date, India's response to extradition requests, and any signs of mobilisation by Awami League supporters or opponents ahead of the announced return.</div>
+            </td>
+          </tr>
+
+          <!-- Nepal Flood -->
+          <tr data-region="Nepal Flood">
+            <td>
+              <div class="ind-name">Nepal Flood</div>
+              <div class="ind-region">Nepal (transboundary rivers)</div>
+            </td>
+            <td><span class="badge info"><span class="dot"></span>Moderate</span></td>
+            <td class="firm-cell">No Action, Just monitoring</td>
+            <td class="assessment">
+              <p>Nepal has experienced flash floods in recent days, raising concerns of increased downstream water flow into neighbouring Indian states. Several transboundary rivers, including the Gandak and Kosi, originate in Nepal, and authorities in Uttar Pradesh and Bihar have heightened disaster preparedness measures in anticipation of elevated river levels downstream.</p>
+              <div class="action-row">
+                <div class="watch-toggle" onclick="toggleWatch(this)">&#128065; Anticipate <span class="chev">&#9650;</span></div>
+                <span class="action-btn disabled" title="No source link added yet">&#128279; Link</span>
+                <span class="action-btn disabled" title="No attachment added yet">&#128206; Attach</span>
+              </div>
+              <div class="watch-box">Further rainfall or river-level bulletins from Nepal, and whether flows into the Gandak and Kosi continue to rise.</div>
+            </td>
+          </tr>
+
+          <!-- Udaipur weather -->
+          <tr data-region="Udaipur">
+            <td>
+              <div class="ind-name">Partners' Meet (03-04 September)- Udaipur -Weather alert</div>
+              <div class="ind-region">Udaipur, Rajasthan</div>
+            </td>
+            <td><span class="badge stable"><span class="dot"></span>Low</span></td>
+            <td class="firm-cell">Monitoring and regular weather reports shared</td>
+            <td class="assessment">
+              <p><b>Sept 03-04 Outlook:</b> There are no <a href="https://city.imd.gov.in/citywx/city_weather_test_try_warnings.php?id=42542" target="_blank" rel="noopener" class="inline-link">weather warnings</a> through 04 Sept. As per the latest <a href="https://mausam.imd.gov.in/jaipur/mcdata/state.pdf" target="_blank" rel="noopener" class="inline-link">IMD forecast</a>, the weather is likely to remain largely dry with partly cloudy skies, followed by brief, passing showers at isolated places in Udaipur (25-50% chance of precipitation).</p>
+              <p><a href="https://www.accuweather.com/en/in/udaipur/190217/10-day-weather-forecast/190217" target="_blank" rel="noopener" class="inline-link">Secondary</a> <a href="https://www.windy.com/24.579/73.686?rain,23.543,73.632,8,p:cities" target="_blank" rel="noopener" class="inline-link">sources</a> indicate light passing showers in the afternoon hours of 03 Sept, Thursday, and light showers with thunderstorms on the evening of 04 Sept, Friday.</p>
+              <p>During this period, temperatures are expected to range from 24&deg;C to 32&deg;C with 73% humidity. The Air Quality Index is currently rated as Moderate.</p>
+              <div class="action-row">
+                <div class="watch-toggle" onclick="toggleWatch(this)">&#128065; Anticipate <span class="chev">&#9650;</span></div>
+                <a href="https://mausam.imd.gov.in/jaipur/mcdata/state.pdf" target="_blank" rel="noopener" class="action-btn active">&#128279; IMD Forecast</a>
+                <a href="https://www.windy.com/-Rain-thunder-rain?rain,23.958,73.686,8,p:cities" target="_blank" rel="noopener" class="action-btn active">&#128279; Windy Rain Map</a>
+                <span class="action-btn disabled" title="No attachment added yet">&#128206; Attach</span>
+              </div>
+              <div class="watch-box">Any change in the IMD extended-range outlook for Udaipur beyond Sept 4, and any shift in the Moderate AQI rating.</div>
+            </td>
+          </tr>
+
+          <!-- Empty state, shown via JS when a region has no active indicators -->
+          <tr id="noIncidentsRow" style="display:none;">
+            <td colspan="4" style="text-align:center; color:var(--muted); font-size:0.88rem; padding:1.75rem 0.5rem;">
+              No active incidents currently monitored for this region.
+            </td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- FLASHPOINT DATES -->
+  <section>
+    <div class="section-title">Flashpoint Dates</div>
+    <div class="card">
+      <table class="flashpoints">
+        <thead>
+          <tr><th>Date</th><th>Event &amp; Watch</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="fp-date">Sept 5-6</td>
+            <td>BRICS Global Impact Forum, The Taj Mahal Palace, Mumbai</td>
+          </tr>
+          <tr>
+            <td class="fp-date">Sept 12-13</td>
+            <td>18th BRICS Summit, Bharat Mandapam, New Delhi</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- CONFIDENCE ASSESSMENT -->
+  <section>
+    <div class="section-title">Confidence Assessment</div>
+    <div class="card">
+      <p style="margin:0; font-size:0.88rem; line-height:1.6; color:#374151;">Assessment draws on official government bulletins (MoHFW, IMD Kolkata, IMD Jaipur, MEA, BMD) and named news sources (News18, BBC, Frontline/The Hindu, Free Press Journal, Newsfirst.lk). <b>High confidence</b> on weather, health, and confirmed-date events, corroborated by primary government sources. <b>Moderate confidence</b> on developing situations without a confirmed date, notably Sheikh Hasina's proposed December return to Bangladesh.</p>
+    </div>
+  </section>
+
+  <footer>
+    <div class="foot-strong">South Asia Operational Monitoring Dashboard</div>
+    As of 01 Sept 2026 &nbsp;|&nbsp; Internal Use Only
+  </footer>
+
+</div>
+
+<!-- IMPACT MODAL -->
+<div class="modal-overlay" id="impactModal" onclick="closeImpactModalOnOverlay(event)">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 class="modal-title">Overall Impact on Firm Offices</h3>
+      <button class="modal-close" onclick="closeImpactModal()" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-status-line">No Impact</div>
+    <ul>
+      <li>Travel/Operational impact &ndash; 0</li>
+      <li>Safety/security issue &ndash; 0</li>
+      <li>Outreach sent &ndash; 6</li>
+    </ul>
+    <svg viewBox="0 0 450 200" class="status-curve-svg" role="img" aria-label="Impact curve: Travel/Operational impact 0, Safety/security issue 0, Outreach sent 6">
+      <defs>
+        <linearGradient id="impactCurveFill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#1a6aad" stop-opacity="0.18"/>
+          <stop offset="100%" stop-color="#1a6aad" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <line x1="80" y1="150" x2="370" y2="150" stroke="#e5e7eb" stroke-width="1.5"/>
+      <path d="M 80.0,150.0 C 152.5,150.0 152.5,150.0 225.0,150.0 C 297.5,150.0 297.5,25.0 370.0,25.0 L 370.0,150 L 80.0,150 Z" fill="url(#impactCurveFill)"/>
+      <path d="M 80.0,150.0 C 152.5,150.0 152.5,150.0 225.0,150.0 C 297.5,150.0 297.5,25.0 370.0,25.0" fill="none" stroke="#1a6aad" stroke-width="2.5" stroke-linecap="round"/>
+
+      <circle cx="80" cy="150" r="6" fill="#b5690a" stroke="#fff" stroke-width="2"/>
+      <text x="80" y="140" text-anchor="middle" class="curve-val">0</text>
+      <text x="80" y="175" text-anchor="middle" class="curve-label">Travel/Operational</text>
+
+      <circle cx="225" cy="150" r="6" fill="#c0392b" stroke="#fff" stroke-width="2"/>
+      <text x="225" y="140" text-anchor="middle" class="curve-val">0</text>
+      <text x="225" y="175" text-anchor="middle" class="curve-label">Safety/Security</text>
+
+      <circle cx="370" cy="25" r="6" fill="#1a6aad" stroke="#fff" stroke-width="2"/>
+      <text x="370" y="15" text-anchor="middle" class="curve-val">6</text>
+      <text x="370" y="175" text-anchor="middle" class="curve-label">Outreach Sent</text>
+    </svg>
+  </div>
+</div>
+
+<!-- KEY IMPLICATIONS MODAL -->
+<div class="modal-overlay" id="implicationsModal" onclick="closeImplicationsModalOnOverlay(event)">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 class="modal-title">Key Implications</h3>
+      <button class="modal-close" onclick="closeImplicationsModal()" aria-label="Close">&times;</button>
+    </div>
+    <ul>
+      <li>Temporary traffic restrictions/diversions are anticipated in Delhi and Mumbai through the BRICS events.</li>
+      <li>Delhi/Gurugram H1N1 case count continues to rise; employees experiencing flu-like symptoms should seek prompt medical attention.</li>
+      <li>Kolkata and southern Bengal may see localized flooding, reduced public transport availability, and traffic congestion until 02 September due to active weather warnings.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- SHORT-TERM MONITORING MODAL -->
+<div class="modal-overlay" id="shortTermModal" onclick="closeShortTermModalOnOverlay(event)">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 class="modal-title">Short-Term Monitoring</h3>
+      <button class="modal-close" onclick="closeShortTermModal()" aria-label="Close">&times;</button>
+    </div>
+    <ul>
+      <li>BRICS Summit- Delhi</li>
+      <li>BRICS Global Impact Forum- Mumbai</li>
+      <li>Inclement Weather Alert &ndash; Kolkata</li>
+      <li>Inclement Weather Alert &ndash; Dhaka &amp; Chattogram</li>
+      <li>Protest Activity &ndash; Dhaka</li>
+      <li>Partners' Meet (03-04 September)- Udaipur -Weather alert</li>
+      <li>Nepal Flood</li>
+    </ul>
+  </div>
+</div>
+
+<!-- LONG-TERM MONITORING MODAL -->
+<div class="modal-overlay" id="longTermModal" onclick="closeLongTermModalOnOverlay(event)">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 class="modal-title">Long-Term Monitoring</h3>
+      <button class="modal-close" onclick="closeLongTermModal()" aria-label="Close">&times;</button>
+    </div>
+    <ul>
+      <li>H1N1 outbreak Delhi/Gurugram</li>
+      <li>H1N1 (Swine Flu) Outbreak &ndash; Bengaluru</li>
+      <li>Dengue Outbreak &ndash; Colombo</li>
+      <li>Socio/political instability &ndash; Dhaka &amp; Chattogram</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+function toggleWatch(el){
+  el.classList.toggle('open');
+  var row = el.closest('.action-row');
+  var box = row ? row.nextElementSibling : el.nextElementSibling;
+  box.classList.toggle('open');
+}
+
+function filterRegion(region, btn){
+  document.querySelectorAll('.region-tab').forEach(function(t){ t.classList.remove('active'); });
+  btn.classList.add('active');
+
+  var rows = document.querySelectorAll('#indicatorBody tr[data-region]');
+  var visibleCount = 0;
+  rows.forEach(function(row){
+    var match = (region === 'All' || row.getAttribute('data-region') === region);
+    row.style.display = match ? '' : 'none';
+    if(match) visibleCount++;
+  });
+
+  var emptyRow = document.getElementById('noIncidentsRow');
+  emptyRow.style.display = (visibleCount === 0) ? '' : 'none';
+}
+
+function toggleRegionGroup(groupId, btn){
+  var group = document.getElementById(groupId);
+  var isOpen = group.style.display !== 'none';
+
+  // Close the other group + reset its button state
+  ['firmOfficeGroup', 'firmEventGroup'].forEach(function(id){
+    if(id !== groupId){
+      document.getElementById(id).style.display = 'none';
+    }
+  });
+  document.querySelectorAll('.region-group-tab').forEach(function(t){
+    if(t !== btn){ t.classList.remove('open'); }
+  });
+
+  group.style.display = isOpen ? 'none' : 'flex';
+  btn.classList.toggle('open', !isOpen);
+}
+
+function openImpactModal(){
+  document.getElementById('impactModal').classList.add('open');
+}
+function closeImpactModal(){
+  document.getElementById('impactModal').classList.remove('open');
+}
+function closeImpactModalOnOverlay(e){
+  if(e.target.id === 'impactModal'){ closeImpactModal(); }
+}
+
+function openImplicationsModal(){
+  document.getElementById('implicationsModal').classList.add('open');
+}
+function closeImplicationsModal(){
+  document.getElementById('implicationsModal').classList.remove('open');
+}
+function closeImplicationsModalOnOverlay(e){
+  if(e.target.id === 'implicationsModal'){ closeImplicationsModal(); }
+}
+
+function openShortTermModal(){
+  document.getElementById('shortTermModal').classList.add('open');
+}
+function closeShortTermModal(){
+  document.getElementById('shortTermModal').classList.remove('open');
+}
+function closeShortTermModalOnOverlay(e){
+  if(e.target.id === 'shortTermModal'){ closeShortTermModal(); }
+}
+
+function openLongTermModal(){
+  document.getElementById('longTermModal').classList.add('open');
+}
+function closeLongTermModal(){
+  document.getElementById('longTermModal').classList.remove('open');
+}
+function closeLongTermModalOnOverlay(e){
+  if(e.target.id === 'longTermModal'){ closeLongTermModal(); }
+}
+</script>
+</body>
+</html>
